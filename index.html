@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+  </head>
+  <body>
+    <form
+      id="upload-form"
+      enctype="multipart/form-data"
+      action="http://localhost:1337/api/upload"
+      method="post"
+    >
+      <input type="file" name="fileUpload" id="fileUpload" />
+      <input type="submit" value="upload" />
+    </form>
+
+    <script>
+      document.addEventListener("submit", (e) => {
+        e.preventDefault();
+        var file = document.getElementById("fileUpload").files[0];
+        var formData = new FormData();
+        formData.append("fileUpload", file);
+
+        fetch("http://127.0.0.1:1337/api/upload", {
+          method: "POST",
+          mode: "no-cors",
+          accept: "application/json",
+          body: formData,
+        }).then((res) => {
+          switch (res.status) {
+            case "200":
+              console.log("Response OK");
+              break;
+            case "301":
+              console.log("Response Already Exists");
+              break;
+            case "404":
+              console.log("Response Not Found");
+              break;
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
