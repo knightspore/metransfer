@@ -15,11 +15,13 @@ func makeHash(n string, s int64) string {
 	return h
 }
 
-func writeJson(w http.ResponseWriter, d map[string]string) {
+func writeJson(w http.ResponseWriter, d map[string]string, s int) {
 	jd, err := json.Marshal(d)
 	if err != nil {
 		log.Println(err)
 	}
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(s)
 	w.Write(jd)
 }

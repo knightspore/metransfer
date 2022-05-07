@@ -27,7 +27,8 @@
         fetch("http://127.0.0.1:1337/api/upload", {
           method: "POST",
           mode: "no-cors",
-          accept: "application/json",
+          "Access-Control-Allow-Origin": "*",
+          accept: "*",
           body: formData,
         }).then((res) => {
           switch (res.status) {

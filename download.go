@@ -15,10 +15,9 @@ func downloadFile(w http.ResponseWriter, r *http.Request) {
 	if !exists {
 
 		log.Printf("!!! Error: File Not Found")
-		w.WriteHeader(http.StatusNotFound)
 		writeJson(w, map[string]string{
 			"status": "404",
-		})
+		}, http.StatusNotFound)
 
 	} else {
 

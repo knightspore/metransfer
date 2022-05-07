@@ -6,10 +6,6 @@ import (
 	"os"
 )
 
-/*
-	Main
-*/
-
 func main() {
 	logFile, err := os.OpenFile("/tmp/metransfer.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {

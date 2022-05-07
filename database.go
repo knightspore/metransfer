@@ -7,10 +7,6 @@ import (
 	"path/filepath"
 )
 
-/*
-	Database
-*/
-
 var db = map[string]string{}
 
 func initDb() {
