@@ -4,13 +4,14 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 )
 
 func makeHash(n string, s int64) string {
 	b := sha1.New()
-	b.Write([]byte(n + string(s)))
+	b.Write([]byte(n + fmt.Sprint(s)))
 	h := hex.EncodeToString(b.Sum(nil))
 	return h
 }
