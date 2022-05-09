@@ -32,7 +32,6 @@ func TestPrintDb(t *testing.T) {
 	log.SetOutput(&buf)
 	printDb()
 	output := buf.String()
-	log.SetOutput(os.Stderr)
 
 	split := strings.Split(output, " ")
 
