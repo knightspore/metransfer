@@ -16,7 +16,11 @@ func compareTest(g string, w string) {
 }
 
 func setup() {
+
 	fmt.Println("Setup Tests")
+
+	var buf bytes.Buffer
+	setupLog(&buf)
 
 	newpath := filepath.Join(".", "upload")
 	err := os.MkdirAll(newpath, os.ModePerm)
@@ -40,10 +44,6 @@ func setup() {
 
 	initDb()
 
-	fmt.Println("Setup Complete - Hiding Logs.")
-
-	var buf bytes.Buffer
-	log.SetOutput(&buf)
 }
 
 func shutdown() {

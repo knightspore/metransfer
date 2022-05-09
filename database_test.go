@@ -10,6 +10,7 @@ import (
 func TestInitDb(t *testing.T) {
 	if got, want := db[hash], "testUpload"; got != want {
 		t.Errorf("initDb() not working as expected")
+		compareTest(got, want)
 	}
 }
 
@@ -27,12 +28,12 @@ func TestPrintDb(t *testing.T) {
 
 	if got, want := split[8], hashBufString; got != want {
 		t.Errorf("printDb() Not working as expected")
-		compareTest(split[8], hashBufString)
+		compareTest(got, want)
 	}
 
 	if got, want := split[10], testFileName; got != want {
 		t.Errorf("printDb() Not working as expected")
-		compareTest(split[10], testFileName)
+		compareTest(got, want)
 	}
 
 }

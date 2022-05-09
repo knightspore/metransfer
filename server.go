@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 func uploadFile(w http.ResponseWriter, r *http.Request) {
@@ -89,5 +90,11 @@ func setupRoutes() {
 	http.HandleFunc("/api/upload", uploadFile)
 	http.HandleFunc("/api/download/", downloadFile)
 
-	http.ListenAndServe(":1337", nil)
+	s := &http.Server{
+		ReadTimeout:  1 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		Addr:         ":1337",
+	}
+
+	s.ListenAndServe()
 }
