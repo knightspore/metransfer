@@ -2,27 +2,14 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"log"
-	"os"
 	"strings"
 	"testing"
 )
 
 func TestInitDb(t *testing.T) {
-	initDb()
-
-	_, err := os.ReadDir("./upload")
-	if err != nil {
-		t.Errorf("%v", err)
-	}
-}
-
-func TestUpdateDb(t *testing.T) {
-	updateDb("12345", "testUpload")
-
-	if got, want := db["12345"], "testUpload"; got != want {
-		t.Errorf("Created record %v is not equal to expected %v", got, want)
+	if got, want := db[hash], "testUpload"; got != want {
+		t.Errorf("initDb() not working as expected")
 	}
 }
 
@@ -35,12 +22,17 @@ func TestPrintDb(t *testing.T) {
 
 	split := strings.Split(output, " ")
 
-	if got, want := split[8], "\"3132333435\","; got != want {
-		fmt.Println("printDb() Not working as expected")
+	hashBufString := "\"38623461383531323230343930633438356233363333626330393133343739343464383665313963\","
+	testFileName := "\"testUpload\""
+
+	if got, want := split[8], hashBufString; got != want {
+		t.Errorf("printDb() Not working as expected")
+		compareTest(split[8], hashBufString)
 	}
 
-	if got, want := split[10], "\"testUpload\""; got != want {
-		fmt.Println("printDb() Not working as expected")
+	if got, want := split[10], testFileName; got != want {
+		t.Errorf("printDb() Not working as expected")
+		compareTest(split[10], testFileName)
 	}
 
 }
