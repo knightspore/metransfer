@@ -6,18 +6,21 @@ import (
 	"os"
 )
 
-func setupLog(w io.Writer) {
+func main() {
+	os.Exit(setupApplication(os.Stdout))
+	setupRoutes()
+}
+
+func setupApplication(w io.Writer) int {
 	logFile, err := os.OpenFile("/tmp/metransfer.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
 	multi := io.MultiWriter(logFile, os.Stdout)
 	log.SetOutput(multi)
-}
 
-func main() {
-	setupLog(os.Stdout)
 	log.Println("::> Start Server")
+
 	initDb()
-	setupRoutes()
+	return 0
 }

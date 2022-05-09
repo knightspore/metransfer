@@ -19,9 +19,6 @@ func setup() {
 
 	fmt.Println("Setup Tests")
 
-	var buf bytes.Buffer
-	setupLog(&buf)
-
 	newpath := filepath.Join(".", "upload")
 	err := os.MkdirAll(newpath, os.ModePerm)
 	if err != nil {
@@ -42,7 +39,8 @@ func setup() {
 		log.Fatal(err2)
 	}
 
-	initDb()
+	var buf bytes.Buffer
+	setupApplication(&buf)
 
 }
 
