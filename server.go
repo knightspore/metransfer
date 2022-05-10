@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -96,5 +97,7 @@ func setupRoutes() {
 		Addr:         ":1337",
 	}
 
-	s.ListenAndServe()
+	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		fmt.Println(err)
+	}
 }

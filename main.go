@@ -7,11 +7,11 @@ import (
 )
 
 func main() {
-	os.Exit(setupApplication(os.Stdout))
+	setupApplication(os.Stdout)
 	setupRoutes()
 }
 
-func setupApplication(w io.Writer) int {
+func setupApplication(w io.Writer) {
 	logFile, err := os.OpenFile("/tmp/metransfer.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Fatal(err)
@@ -22,5 +22,4 @@ func setupApplication(w io.Writer) int {
 	log.Println("::> Start Server")
 
 	initDb()
-	return 0
 }
