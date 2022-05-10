@@ -6,6 +6,8 @@ run:
 
 test: 
 	go test . -v -coverprofile cover.out
+
+cover:
 	go tool cover -html=cover.out
 
-all: test build
+all: test cover build
