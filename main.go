@@ -19,9 +19,10 @@ func setupApplication(w io.Writer) {
 	multi := io.MultiWriter(logFile, os.Stdout)
 	log.SetOutput(multi)
 
+	log.Println("")
+	log.Println("")
 	log.Println("::> Start Server")
 
 	setupDb()
-	seedDb()
-	printDb()
+	populateDb()
 }

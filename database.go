@@ -44,7 +44,7 @@ func setupDb() {
 
 }
 
-func seedDb() {
+func populateDb() {
 
 	db, _ := sql.Open("sqlite3", dbFile)
 	defer db.Close()
@@ -63,16 +63,15 @@ func seedDb() {
 	}
 
 	if len(files) > 0 {
-		log.Println("~~~ Adding Existing Files to Database")
+		log.Printf("~~~ Adding %v Existing Files to Database", len(files))
 		for _, file := range files {
 			h := makeHash(file.Name(), file.Size())
 			insertRecord(db, h, file.Name())
 		}
 
-		log.Printf("+++ Database Seeded")
+		log.Printf("+++ Database Populated")
+		printDb()
 	}
-
-	log.Println("::> DB Initialized")
 
 }
 

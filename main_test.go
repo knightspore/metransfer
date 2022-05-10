@@ -44,7 +44,7 @@ func setup() {
 
 }
 
-func shutdown() {
+func teardown() {
 	fmt.Println("Test Shutdown")
 	err := os.RemoveAll("./upload")
 	if err != nil {
@@ -55,6 +55,6 @@ func shutdown() {
 func TestMain(m *testing.M) {
 	setup()
 	code := m.Run()
-	shutdown()
+	teardown()
 	os.Exit(code)
 }

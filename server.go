@@ -54,9 +54,9 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 		insertRecord(db, h, handler.Filename)
 
 		log.Printf("Uploaded File: %v", handler.Filename)
-		log.Printf("File Size: %v", handler.Size)
-		log.Printf("File Hash: %s", h)
-		log.Printf("URL: http://127.0.0.1:1337/api/download/%s", h)
+		log.Printf("File Size:\t%v", handler.Size)
+		log.Printf("File Hash:\t%s", h)
+		log.Printf("File URL:\thttp://127.0.0.1:1337/api/download/%s", h)
 
 		writeJson(w, map[string]string{
 			"status": "200",
