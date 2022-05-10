@@ -94,20 +94,21 @@ func insertRecord(db *sql.DB, h string, n string) {
 
 }
 
-func getRecord(db *sql.DB, h string) (bool, string, string) {
+func getRecord(db *sql.DB, h string) (bool, Upload) {
 
 	getSql := `SELECT hash, name FROM upload WHERE hash=$1`
-	var hash, name string
+
+	var file Upload
 
 	row := db.QueryRow(getSql, h)
-	switch err := row.Scan(&hash, &name); err {
+	switch err := row.Scan(&file.hash, &file.name); err {
 	case sql.ErrNoRows:
 		log.Printf("No rows were found for %s", h)
-		return false, "", ""
+		return false, file
 	case nil:
-		return true, hash, name
+		return true, file
 	default:
-		return false, "", ""
+		return false, file
 	}
 
 }

@@ -1,13 +1,16 @@
 package main
 
 import (
+	"context"
 	"database/sql"
-	"fmt"
+	"errors"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -29,7 +32,7 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 	db, _ := sql.Open("sqlite3", dbFile)
 	defer db.Close()
 
-	exists, recH, _ := getRecord(db, h)
+	exists, upload := getRecord(db, h)
 
 	if exists {
 
@@ -37,7 +40,7 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 
 		writeJson(w, map[string]string{
 			"status": "301",
-			"url":    "http://127.0.0.1:1337/api/download/" + recH},
+			"url":    "http://127.0.0.1:1337/api/download/" + upload.hash},
 			http.StatusMovedPermanently)
 
 	} else {
@@ -74,7 +77,7 @@ func downloadFile(w http.ResponseWriter, r *http.Request) {
 	db, _ := sql.Open("sqlite3", dbFile)
 	defer db.Close()
 
-	exists, _, name := getRecord(db, h)
+	exists, upload := getRecord(db, h)
 
 	if !exists {
 
@@ -85,9 +88,9 @@ func downloadFile(w http.ResponseWriter, r *http.Request) {
 
 	} else {
 
-		log.Printf("~~~ Serving File: %s", name)
-		w.Header().Set("Content-Disposition", "attachment; filename="+name)
-		http.ServeFile(w, r, "./upload/"+name)
+		log.Printf("~~~ Serving File: %s", upload.name)
+		w.Header().Set("Content-Disposition", "attachment; filename="+upload.name)
+		http.ServeFile(w, r, "./upload/"+upload.name)
 
 	}
 
@@ -95,8 +98,36 @@ func downloadFile(w http.ResponseWriter, r *http.Request) {
 
 // Main Server
 
-func setupRoutes() {
+func createChannel() (chan os.Signal, func()) {
+	stopCh := make(chan os.Signal, 1)
+	signal.Notify(stopCh, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+
+	return stopCh, func() {
+		close(stopCh)
+	}
+}
+
+func start(s *http.Server) {
 	log.Println("::> Awaiting Server Connections")
+	if err := s.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		panic(err)
+	} else {
+		log.Println("::> Server Stopped Gracefully")
+	}
+}
+
+func shutdown(ctx context.Context, s *http.Server) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	if err := s.Shutdown(ctx); err != nil {
+		panic(err)
+	} else {
+		log.Println("::> Application Shut Down")
+	}
+}
+
+func setupRoutes() {
 
 	http.HandleFunc("/api/upload", uploadFile)
 	http.HandleFunc("/api/download/", downloadFile)
@@ -107,7 +138,12 @@ func setupRoutes() {
 		Addr:         ":1337",
 	}
 
-	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		fmt.Println(err)
-	}
+	go start(s)
+
+	stopCh, closeCh := createChannel()
+	defer closeCh()
+	log.Println("::> Notified:", <-stopCh)
+
+	shutdown(context.Background(), s)
+
 }

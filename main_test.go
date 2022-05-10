@@ -40,7 +40,7 @@ func setup() {
 	}
 
 	var buf bytes.Buffer
-	setupApplication(&buf)
+	setupApplication(&buf, true)
 
 }
 
