@@ -127,7 +127,7 @@ func shutdown(ctx context.Context, s *http.Server) {
 	}
 }
 
-func setupRoutes() {
+func setupRoutes() *http.Server {
 
 	http.HandleFunc("/api/upload", uploadFile)
 	http.HandleFunc("/api/download/", downloadFile)
@@ -138,12 +138,6 @@ func setupRoutes() {
 		Addr:         ":1337",
 	}
 
-	go start(s)
-
-	stopCh, closeCh := createChannel()
-	defer closeCh()
-	log.Println("::> Notified:", <-stopCh)
-
-	shutdown(context.Background(), s)
+	return s
 
 }

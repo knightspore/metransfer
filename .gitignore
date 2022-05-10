@@ -1,4 +1,4 @@
-bin/*
-upload/*
-cover.out
+bin/
+upload/
 metransfer.db
+cover.out
