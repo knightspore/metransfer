@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"io"
 	"log"
@@ -25,13 +26,18 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 
 	h := makeHash(handler.Filename, handler.Size)
 
-	if len(db[h]) != 0 {
+	db, _ := sql.Open("sqlite3", dbFile)
+	defer db.Close()
+
+	exists, recH, _ := getRecord(db, h)
+
+	if exists {
 
 		log.Println("!!! Error: File Already Exists")
 
 		writeJson(w, map[string]string{
 			"status": "301",
-			"url":    "http://127.0.0.1:1337/api/download/" + h},
+			"url":    "http://127.0.0.1:1337/api/download/" + recH},
 			http.StatusMovedPermanently)
 
 	} else {
@@ -45,7 +51,7 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 		defer f.Close()
 		io.Copy(f, file)
 
-		updateDb(h, handler.Filename)
+		insertRecord(db, h, handler.Filename)
 
 		log.Printf("Uploaded File: %v", handler.Filename)
 		log.Printf("File Size: %v", handler.Size)
@@ -64,7 +70,11 @@ func downloadFile(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("::> New Download Request")
 	h := strings.Replace(r.URL.String(), "/api/download/", "", -1)
-	file, exists := db[h]
+
+	db, _ := sql.Open("sqlite3", dbFile)
+	defer db.Close()
+
+	exists, _, name := getRecord(db, h)
 
 	if !exists {
 
@@ -75,9 +85,9 @@ func downloadFile(w http.ResponseWriter, r *http.Request) {
 
 	} else {
 
-		log.Printf("~~~ Serving File: %s", file)
-		w.Header().Set("Content-Disposition", "attachment; filename="+file)
-		http.ServeFile(w, r, "./upload/"+file)
+		log.Printf("~~~ Serving File: %s", name)
+		w.Header().Set("Content-Disposition", "attachment; filename="+name)
+		http.ServeFile(w, r, "./upload/"+name)
 
 	}
 

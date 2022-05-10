@@ -21,5 +21,7 @@ func setupApplication(w io.Writer) {
 
 	log.Println("::> Start Server")
 
-	initDb()
+	setupDb()
+	seedDb()
+	printDb()
 }
