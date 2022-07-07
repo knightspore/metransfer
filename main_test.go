@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"os"
@@ -38,9 +37,6 @@ func setup() {
 	if err2 != nil {
 		log.Fatal(err2)
 	}
-
-	var buf bytes.Buffer
-	setupApplication(&buf, true)
 
 }
 

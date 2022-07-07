@@ -2,46 +2,42 @@ package main
 
 import (
 	"context"
-	"io"
-	"log"
-	"os"
 	"path/filepath"
 )
 
-var database = Database{Path: "./metransfer.db", Type: "sqlite3", UploadDir: filepath.Join(".", "upload")}
-
-func main() {
-	setupApplication(os.Stdout, false)
+var database = Database{
+	Path:      "./metransfer.db",
+	Type:      "sqlite3",
+	UploadDir: filepath.Join(".", "upload"),
 }
 
-func setupApplication(w io.Writer, isTest bool) {
+var server = FileServer{
+	Port: ":2080",
+}
 
-	log.Println("::> Start Server")
+var logger = Log{
+	LogPath: "/tmp/metransfer.log",
+	Multi:   nil,
+}
 
-	setupLog(isTest, w)
+func main() {
+
+	logger.Setup()
 	database.Setup()
-	database.Populate()
+	server.Setup()
 
-	s := setupRoutes()
+	go server.Start()
 
-	if isTest == false {
-		// Start Server with Graceful Shutdown
-		go start(s)
+	stopCh, closeCh := server.CreateChannel()
+	defer closeCh()
+	<-stopCh
 
-		stopCh, closeCh := createChannel()
-		defer closeCh()
-		log.Println("::> Notified:", <-stopCh)
+	server.Stop(context.Background())
 
-		shutdown(context.Background(), s)
-	} else {
-		// Test Start Server and Graceful Shutdown
-		go start(s)
-
-		_, closeCh := createChannel()
-
-		closeCh()
-		shutdown(context.Background(), s)
-
-	}
+	// Test Start Server and Graceful Shutdown
+	//go server.Start()
+	//_, closeCh := server.CreateChannel()
+	//closeCh()
+	//server.Stop(context.Background())
 
 }

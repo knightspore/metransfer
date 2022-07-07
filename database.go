@@ -5,8 +5,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"io/fs"
 	"io/ioutil"
-	"log"
 	"os"
+	"strconv"
 )
 
 const dbFile string = "./metransfer.db"
@@ -20,11 +20,14 @@ func (d *Database) Connect() *sql.DB {
 // Setup creates the database file and upload folder if it does not exist
 func (d *Database) Setup() {
 
-	os.Remove(d.Path)
-
-	_, err := os.Create(d.Path)
+	err := os.Remove(d.Path)
 	if err != nil {
-		log.Fatalf("!!! Error creating database file: %s", d.Path)
+		logger.Warn("No database file found on server start")
+	}
+
+	_, err = os.Create(d.Path)
+	if err != nil {
+		logger.Warn("Error creating database file: (d.Path)" + d.Path)
 	}
 
 	db := d.Connect()
@@ -36,16 +39,30 @@ func (d *Database) Setup() {
 	);`)
 
 	if err != nil {
-		log.Println("!!! Error preparing database table")
-		log.Fatalf(err.Error())
+		logger.Error("Error creating table", err.Error())
 	}
 
 	stmt.Exec()
+	if err != nil {
+		logger.Error("Error executing table creation", err.Error())
+	}
 
 	err = os.MkdirAll(d.UploadDir, os.ModePerm)
 	if err != nil {
-		log.Println("!!! Error Creating Upload Folder")
-		log.Fatal(err)
+		logger.Error("Error creating upload directory", err.Error())
+	}
+
+	// Populate Upload Folder
+	files := d.Files()
+	if len(files) > 0 {
+		logger.Info("Adding " + strconv.Itoa(len(files)) + " Existing Files to Database")
+		for _, file := range files {
+			h := makeHash(file.Name(), file.Size())
+			d.InsertRecord(h, file.Name())
+		}
+		logger.Info("Database populated with existing files")
+	} else {
+		logger.Warn("No existing files found in upload directory")
 	}
 
 }
@@ -55,32 +72,10 @@ func (d *Database) Files() []fs.FileInfo {
 
 	files, err := ioutil.ReadDir(d.UploadDir)
 	if err != nil {
-		log.Println("!!! No Upload Folder Found")
-		log.Fatal(err)
+		logger.Error("Error reading upload directory", err.Error())
 	}
 
 	return files
-}
-
-// Populate inserts existing files from the upload folder into the database on restart
-func (d *Database) Populate() {
-
-	files := d.Files()
-	db := d.Connect()
-	defer db.Close()
-
-	if len(files) > 0 {
-		log.Printf("~~~ Adding %v Existing Files to Database", len(files))
-		for _, file := range files {
-			h := makeHash(file.Name(), file.Size())
-			d.InsertRecord(h, file.Name())
-		}
-		log.Printf("+++ Database Populated")
-		database.LogRecords()
-	} else {
-		log.Println("No Files to Populate")
-	}
-
 }
 
 // InsertRecord inserts a record into the database (hash, name)
@@ -90,17 +85,16 @@ func (d *Database) InsertRecord(h string, n string) {
 
 	stmt, err := db.Prepare(`INSERT INTO upload(hash, name) VALUES (?, ?)`)
 	if err != nil {
-		log.Fatalf("Error creating insert SQL string")
-		log.Fatalln(err.Error())
+		logger.Error("Error preparing insert statement", err.Error())
 	}
 
 	_, err = stmt.Exec(h, n)
 	if err != nil {
-		log.Fatalf("Error inserting upload into database")
-		log.Fatalln(err.Error())
+		logger.Error("Error executing insert statement", err.Error())
 	}
 
-	log.Printf("+++ New Database Entry: { hash: \"%s\", name: \"%s\" }", h, n)
+	logger.Info("Inserted record into database")
+	logger.Info("{ hash: \"" + h + "\", name: \"" + n + "\" }")
 }
 
 // GetRecord returns a record from the database for a file hash
@@ -113,7 +107,7 @@ func (d *Database) GetRecord(h string) (bool, Upload) {
 	row := db.QueryRow(`SELECT hash, name FROM upload WHERE hash=$1`, h)
 	switch err := row.Scan(&file.hash, &file.name); err {
 	case sql.ErrNoRows:
-		log.Printf("No rows were found for %s", h)
+		logger.Info("No record found for hash: " + h)
 		return false, file
 	case nil:
 		return true, file
@@ -130,7 +124,7 @@ func (d *Database) LogRecords() {
 
 	row, err := db.Query("SELECT * FROM upload")
 	if err != nil {
-		log.Fatalf("Error querying uploads in Database")
+		logger.Error("Error querying database", err.Error())
 	}
 
 	defer row.Close()
@@ -138,7 +132,7 @@ func (d *Database) LogRecords() {
 	for row.Next() {
 		var hash, name string
 		err = row.Scan(&hash, &name)
-		log.Printf("{ hash: \"%s\", name: \"%s\" }\n", hash, name)
+		logger.Info("{ hash: \"" + hash + "\", name: \"" + name + "\" }")
 	}
 
 }

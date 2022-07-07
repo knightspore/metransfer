@@ -1,18 +1,21 @@
 package main
 
-import "io"
+import (
+	"io"
+	"net/http"
+)
 
 // Log is a struct for the log
 type Log struct {
 	LogPath     string
 	TestLogPath string
-	multi       io.Writer
+	Multi       io.Writer
 }
 
-// LogItem is a struct for the log items
-type LogItem struct {
-	Message string
-	Level   string
+// Event is a struct for the log items
+type Event struct {
+	Level   int
+	Message []interface{}
 }
 
 // Upload is a struct for the uploads table
@@ -26,4 +29,10 @@ type Database struct {
 	Path      string
 	Type      string
 	UploadDir string
+}
+
+// FileServer is a struct for the fileserver
+type FileServer struct {
+	Port   string
+	Server *http.Server
 }
