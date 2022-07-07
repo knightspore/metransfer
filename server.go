@@ -29,10 +29,10 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 
 	h := makeHash(handler.Filename, handler.Size)
 
-	db, _ := sql.Open("sqlite3", dbFile)
+	db := database.Connect()
 	defer db.Close()
 
-	exists, upload := getRecord(db, h)
+	exists, upload := database.GetRecord(h)
 
 	if exists {
 
@@ -54,7 +54,7 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 		defer f.Close()
 		io.Copy(f, file)
 
-		insertRecord(db, h, handler.Filename)
+		database.InsertRecord(h, handler.Filename)
 
 		log.Printf("Uploaded File: %v", handler.Filename)
 		log.Printf("File Size:\t%v", handler.Size)
@@ -63,7 +63,7 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 
 		writeJson(w, map[string]string{
 			"status": "200",
-			"url":    "http://127.0.0.1:1337/api/download/" + h,
+			"url":    "http://127.0.0.1:2080/api/download/" + h,
 		}, http.StatusOK)
 
 	}
@@ -77,8 +77,7 @@ func downloadFile(w http.ResponseWriter, r *http.Request) {
 	db, _ := sql.Open("sqlite3", dbFile)
 	defer db.Close()
 
-	exists, upload := getRecord(db, h)
-
+	exists, upload := database.GetRecord(h)
 	if !exists {
 
 		log.Printf("!!! Error: File Not Found")
@@ -133,9 +132,9 @@ func setupRoutes() *http.Server {
 	http.HandleFunc("/api/download/", downloadFile)
 
 	s := &http.Server{
-		ReadTimeout:  1 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		Addr:         ":1337",
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		Addr:         ":2080",
 	}
 
 	return s

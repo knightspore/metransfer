@@ -2,3 +2,4 @@ bin/
 upload/
 metransfer.db
 cover.out
+.idea/

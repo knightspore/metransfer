@@ -5,12 +5,10 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 )
 
-type Upload struct {
-	hash string
-	name string
-}
+var database = Database{Path: "./metransfer.db", Type: "sqlite3", UploadDir: filepath.Join(".", "upload")}
 
 func main() {
 	setupApplication(os.Stdout, false)
@@ -18,12 +16,11 @@ func main() {
 
 func setupApplication(w io.Writer, isTest bool) {
 
-	log.Println("")
 	log.Println("::> Start Server")
 
 	setupLog(isTest, w)
-	setupDb()
-	populateDb()
+	database.Setup()
+	database.Populate()
 
 	s := setupRoutes()
 
