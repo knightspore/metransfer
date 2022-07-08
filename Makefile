@@ -1,17 +1,20 @@
 test: 
-	go test . -v -coverprofile cover.out
+	cd src && go test . -v -coverprofile ./../cover.out
 
 cover:
-	go tool cover -html=cover.out
+	cd src && go tool cover -html=./../cover.out
 
 build:
-	go build -o bin/metransfer 
-	rm bin/metransfer
+	cd src && go build -o ./../bin/metransfer
+	cp -r src/static/ bin/static/
+
+dev:
+	cd src && go run .
 
 compile:
-	env GOOS=windows GOARCH=amd64 go build -o bin/metransfer.exe
-	env GOOS=darwin GOARCH=amd64 go build -o bin/metransfer.darwin.amd64
-	env GOOS=linux GOARCH=amd64 go build -o bin/metransfer
+	env GOOS=windows GOARCH=amd64 cd src && go build -o ./../bin/metransfer.exe
+	env GOOS=darwin GOARCH=amd64 cd src && go build -o ./../bin/metransfer.darwin.amd64
+	env GOOS=linux GOARCH=amd64 cd src && go build -o ./../bin/metransfer
 
 run:
 	go run .
