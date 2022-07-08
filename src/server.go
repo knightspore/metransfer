@@ -109,10 +109,12 @@ func (s *FileServer) UploadFile(w http.ResponseWriter, r *http.Request) {
 			"File URL: /api/download/"+h,
 		)
 
+		filename := handler.Filename
+
 		writeJson(w, map[string]string{
 			"status":   "200",
 			"url":      "/api/download/" + h,
-			"filename": handler.Filename,
+			"filename": string(filename),
 		}, http.StatusOK)
 
 	}
