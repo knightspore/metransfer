@@ -5,39 +5,33 @@ import (
 	"path/filepath"
 )
 
-var database = Database{
+var AppDatabase = Database{
 	Path:      "./metransfer.db",
 	Type:      "sqlite3",
 	UploadDir: filepath.Join(".", "upload"),
 }
 
-var server = FileServer{
+var Server = FileServer{
 	Port: ":2080",
 }
 
-var logger = Log{
+var Logger = Log{
 	LogPath: "/tmp/metransfer.log",
 	Multi:   nil,
 }
 
 func main() {
 
-	logger.Setup()
-	database.Setup()
-	server.Setup()
+	Logger.Setup()
+	AppDatabase.Setup()
+	Server.Setup()
 
-	go server.Start()
+	go Server.Start()
 
-	stopCh, closeCh := server.CreateChannel()
+	stopCh, closeCh := Server.CreateChannel()
 	defer closeCh()
 	<-stopCh
 
-	server.Stop(context.Background())
-
-	// Test Start Server and Graceful Shutdown
-	//go server.Start()
-	//_, closeCh := server.CreateChannel()
-	//closeCh()
-	//server.Stop(context.Background())
+	Server.Stop(context.Background())
 
 }

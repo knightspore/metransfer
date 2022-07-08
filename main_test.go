@@ -1,10 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"testing"
 )
 
@@ -18,12 +18,11 @@ func setup() {
 
 	fmt.Println("Setup Tests")
 
-	newpath := filepath.Join(".", "upload")
-	err := os.MkdirAll(newpath, os.ModePerm)
-	if err != nil {
-		log.Println("Error Creating Upload Folder")
-		log.Fatal(err)
-	}
+	Logger.Setup()
+	AppDatabase.Setup()
+	Server.Setup()
+
+	go Server.Start()
 
 	f, err := os.Create("./upload/testUpload")
 	if err != nil {
@@ -44,13 +43,19 @@ func teardown() {
 	fmt.Println("Test Shutdown")
 	err := os.RemoveAll("./upload")
 	if err != nil {
-		log.Fatalf("Could not remove test directory")
+		log.Fatalf("Could not remove test upload file")
 	}
 }
 
 func TestMain(m *testing.M) {
+	_, closeCh := Server.CreateChannel()
+	defer closeCh()
 	setup()
 	code := m.Run()
 	teardown()
-	os.Exit(code)
+	closeCh()
+	Server.Stop(context.Background())
+	Logger.Warn(code)
+	os.Exit(0)
+
 }

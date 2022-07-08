@@ -24,7 +24,7 @@ type Upload struct {
 	name string
 }
 
-// Database is a struct for the database
+// Database is a struct for the AppDatabase
 type Database struct {
 	Path      string
 	Type      string

@@ -15,8 +15,7 @@ import (
 
 func (s *FileServer) Setup() {
 
-	fs := http.FileServer(http.Dir("./"))
-	http.Handle("/", fs)
+	http.Handle("/", http.FileServer(http.Dir("./static")))
 	http.HandleFunc("/api/upload", s.UploadFile)
 	http.HandleFunc("/api/download/", s.DownloadFile)
 
@@ -28,11 +27,11 @@ func (s *FileServer) Setup() {
 
 func (s *FileServer) Start() {
 
-	logger.Info("Starting Application")
+	Logger.Info("Starting Application")
 	if err := s.Server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		panic(err)
 	} else {
-		logger.Info("Server Stopped Gracefully")
+		Logger.Info("Server Stopped Gracefully")
 	}
 
 }
@@ -45,7 +44,7 @@ func (s *FileServer) Stop(ctx context.Context) {
 	if err := s.Server.Shutdown(ctx); err != nil {
 		panic(err)
 	} else {
-		logger.Warn("File Server Stopped Gracefully")
+		Logger.Warn("File Server Stopped Gracefully")
 	}
 
 }
@@ -59,45 +58,51 @@ func (s *FileServer) CreateChannel() (chan os.Signal, func()) {
 	}
 }
 
+func (s *FileServer) Index(w http.ResponseWriter, r *http.Request) {
+	http.FileServer(http.Dir("./static"))
+}
+
 func (s *FileServer) UploadFile(w http.ResponseWriter, r *http.Request) {
 
-	logger.Info("New Upload Request")
+	Logger.Info("New Upload Request")
 
 	r.ParseMultipartForm(32 << 20)
 	file, handler, err := r.FormFile("fileUpload")
 	if err != nil {
-		logger.Warn("Error Retrieving File", err)
+		Logger.Warn("Error Retrieving File", err)
 		return
 	}
 	defer file.Close()
 
 	h := makeHash(handler.Filename, handler.Size)
 
-	exists, _ := database.GetRecord(h)
+	exists, _ := AppDatabase.GetRecord(h)
 
 	if exists {
 
-		logger.Warn("File Already Exists", h)
+		Logger.Warn("File Already Exists", h)
 
 		writeJson(w, map[string]string{
-			"status": "301",
-			"url":    "http://127.0.0.1:" + server.Port + "/api/download/" + h},
+			"status":   "301",
+			"url":      "/api/download/" + h,
+			"filename": handler.Filename,
+		},
 			http.StatusMovedPermanently)
 
 	} else {
 
 		f, err := os.OpenFile("./upload/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
 		if err != nil {
-			logger.Warn("Error Opening File to Save Upload", err)
+			Logger.Warn("Error Opening File to Save Upload", err)
 			return
 		}
 
 		defer f.Close()
 		io.Copy(f, file)
 
-		database.InsertRecord(h, handler.Filename)
+		AppDatabase.InsertRecord(h, handler.Filename)
 
-		logger.Info(
+		Logger.Info(
 			"File Uploaded: "+handler.Filename,
 			"File Size: "+strconv.FormatInt(handler.Size, 10),
 			"File Hash: "+h,
@@ -105,8 +110,9 @@ func (s *FileServer) UploadFile(w http.ResponseWriter, r *http.Request) {
 		)
 
 		writeJson(w, map[string]string{
-			"status": "200",
-			"url":    "http://127.0.0.1:2080/api/download/" + h,
+			"status":   "200",
+			"url":      "/api/download/" + h,
+			"filename": handler.Filename,
 		}, http.StatusOK)
 
 	}
@@ -114,21 +120,21 @@ func (s *FileServer) UploadFile(w http.ResponseWriter, r *http.Request) {
 
 func (s *FileServer) DownloadFile(w http.ResponseWriter, r *http.Request) {
 
-	logger.Info("New Download Request")
+	Logger.Info("New Download Request")
 	h := strings.Replace(r.URL.String(), "/api/download/", "", -1)
 
-	exists, upload := database.GetRecord(h)
+	exists, upload := AppDatabase.GetRecord(h)
 	if !exists {
 
-		logger.Warn("File Does Not Exist", h)
+		Logger.Warn("File Does Not Exist", h)
 		writeJson(w, map[string]string{
 			"status": "404",
 		}, http.StatusNotFound)
 
 	} else {
 
-		logger.Info("Serving File: " + upload.name)
-		w.Header().Set("Content-Disposition", "attachment; filename="+upload.name)
+		Logger.Info("Serving File: " + upload.name)
+		w.Header().Set("Content-Disposition", "attachment; filename=\""+upload.name+"\"")
 		http.ServeFile(w, r, "./upload/"+upload.name)
 
 	}
