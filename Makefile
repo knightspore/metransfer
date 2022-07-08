@@ -6,7 +6,7 @@ d_build:
 	docker build -t metransfer .
 
 d_run:
-	docker run -p 80:2080 -d metransfer --no-cache
+	docker run -p 80:2080 -d metransfer
 
 docker: test d_build d_run
 
