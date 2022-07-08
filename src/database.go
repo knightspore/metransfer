@@ -92,7 +92,6 @@ func (d *Database) InsertRecord(h string, n string) {
 	}
 
 	Logger.Info("Inserted record into AppDatabase")
-	Logger.Info("{ hash: \"" + h + "\", name: \"" + n + "\" }")
 }
 
 // GetRecord returns a record from the AppDatabase for a file hash
