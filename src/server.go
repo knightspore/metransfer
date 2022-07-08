@@ -123,7 +123,7 @@ func (s *FileServer) UploadFile(w http.ResponseWriter, r *http.Request) {
 func (s *FileServer) DownloadFile(w http.ResponseWriter, r *http.Request) {
 
 	Logger.Info("New Download Request")
-	h := strings.Replace(r.URL.String(), "/api/download/", "", -1)
+	h := strings.Split(r.URL.String(), "/")[2]
 
 	exists, upload := AppDatabase.GetRecord(h)
 	if !exists {

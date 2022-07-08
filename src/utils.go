@@ -24,9 +24,6 @@ func writeJson(w http.ResponseWriter, d map[string]string, s int) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	for _, data := range d {
-		print(data)
-	}
 	w.WriteHeader(s)
 	_, err = w.Write(jd)
 	if err != nil {
