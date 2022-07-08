@@ -19,4 +19,10 @@ compile:
 run:
 	go run .
 
+dockerbuild:
+	docker build -t metransfer .
+
+dockerrun:
+	docker run -p 8080:2080 -d metransfer
+
 all: test cover build compile

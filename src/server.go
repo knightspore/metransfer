@@ -106,7 +106,6 @@ func (s *FileServer) UploadFile(w http.ResponseWriter, r *http.Request) {
 			"File Uploaded: "+handler.Filename,
 			"File Size: "+strconv.FormatInt(handler.Size, 10),
 			"File Hash: "+h,
-			"File URL: /api/download/"+h,
 		)
 
 		writeJson(w, map[string]string{
