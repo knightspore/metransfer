@@ -91,7 +91,7 @@
                     className={styles.dragArea}
                 >
                     <header id="form-header" className={styles.headerText}>Drag file here to upload</header>
-                    <input multiple={true} id="fileUpload" name="fileUpload" type="file" hidden />
+                    <input id="fileUpload" name="fileUpload" type="file" hidden />
                     { dragActive && <div className={styles.dragFileElement} onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop} /> }
                     { uploadLink && <Link text={uploadText} href={uploadLink}/> }
                 </div>
