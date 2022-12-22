@@ -2,11 +2,12 @@ package main
 
 import (
 	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
 	"io/fs"
 	"io/ioutil"
 	"os"
 	"strconv"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // Connect returns a pointer to a sql.DB object
