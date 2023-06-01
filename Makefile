@@ -13,3 +13,8 @@ docker: test d_build d_run
 test:
 	cd src && go test . -v -coverprofile ./../cover.out
 	cd src && go tool cover -html=./../cover.out
+
+
+testv2:
+	cd v2 && go test . -v -coverprofile ./../cover.out
+	cd v2 && go tool cover -html=./../cover.out

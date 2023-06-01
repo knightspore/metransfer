@@ -6,59 +6,85 @@ import (
 	"testing"
 )
 
-var (
+const (
 	testdir        = "/tmp/metransfer"
 	testdb         = "metransfer.db"
 	file1          = "foo.txt"
 	file2          = "bar.txt"
 	helloworldhash = "41289770591ec7768a9bddc3a282f04fb36db5c6"
+	fakefile       = "fake.txt"
+	fakehash       = "1234abcd"
 )
 
-func TestServer(t *testing.T) {
-	teardown := setupTest(t)
-	defer teardown(t)
+func TestCreateHash(t *testing.T) {
 
-	m := NewMetransfer(testdir, testdb)
+	m := MeTransfer{}
 
-	t.Run("initialized correctly", func(t *testing.T) {
-		t.Run("upload folder set", func(t *testing.T) {
-			path := m.Path()
-			assertEqual(t, path, testdir)
-		})
-		t.Run("db path set", func(t *testing.T) {
-			dbPath := m.DBPath()
-			assertEqual(t, dbPath, fmt.Sprintf("%s/%s", testdir, testdb))
-		})
+	t.Run("creates basic hash", func(t *testing.T) {
+		got := m.CreateHash("Hello World", 24)
+		assertEqual(t, got, helloworldhash)
 	})
 
-	t.Run("can read uploads folder", func(t *testing.T) {
-		files := m.ReadUploadsFolder()
-		got := len(files)
+	t.Run("changes based on file name and size", func(t *testing.T) {
+		got := m.CreateHash("Hello Other World", 24)
+		assertUnequal(t, got, helloworldhash)
+		got2 := m.CreateHash("Hello World", 48)
+		assertUnequal(t, got2, helloworldhash)
+	})
+
+}
+
+func TestInit(t *testing.T) {
+
+	m, teardown := setupTest(t)
+	defer teardown(t)
+
+	err := m.Init()
+	if err != nil {
+		t.Errorf("initialization failed: %+v", err)
+	}
+
+}
+
+func TestDatabase(t *testing.T) {
+
+	m, teardown := setupTest(t)
+	defer teardown(t)
+
+	t.Run("populated with existing files", func(t *testing.T) {
+		got, err := m.ListFiles()
+		if err != nil {
+			t.Errorf("could not list existing files: %+v", err)
+		}
+
 		want := 2
-		if got != want {
-			t.Errorf("got %d want %d", got, want)
+
+		if len(got) != want {
+			t.Errorf("got %d, want %d", len(got), want)
+		}
+
+	})
+
+	t.Run("Insert", func(t *testing.T) {
+		err := m.Insert(fakehash, fakefile)
+		if err != nil {
+			t.Error("could not write to database")
 		}
 	})
 
-}
-
-func TestCreateHash(t *testing.T) {
-	t.Run("basic hash", func(t *testing.T) {
-		got := CreateHash("Hello World", 24)
-		assertEqual(t, got, helloworldhash)
-	})
-	t.Run("changes based on filename", func(t *testing.T) {
-		got := CreateHash("Hello Other World", 24)
-		assertUnequal(t, got, helloworldhash)
-	})
-	t.Run("changes based on filesize", func(t *testing.T) {
-		got := CreateHash("Hello World", 48)
-		assertUnequal(t, got, helloworldhash)
+	t.Run("GetByHash", func(*testing.T) {
+		got, err := m.GetByHash(fakehash)
+		if err != nil {
+			t.Errorf("could not read from database: %+v", err)
+		}
+		want := fakefile
+		assertEqual(t, got, want)
 	})
 
 }
 
-func setupTest(tb testing.TB) func(tb testing.TB) {
+func setupTest(tb testing.TB) (MeTransfer, func(tb testing.TB)) {
+
 	err := os.Mkdir(testdir, os.ModePerm)
 	f1, err := os.Create(fmt.Sprintf("%s/%s", testdir, file1))
 	f2, err := os.Create(fmt.Sprintf("%s/%s", testdir, file2))
@@ -69,12 +95,15 @@ func setupTest(tb testing.TB) func(tb testing.TB) {
 		tb.Fatal(err)
 	}
 
-	return func(tb testing.TB) {
-		err := os.RemoveAll(testdir)
-		if err != nil {
-			tb.Fatalf("Could not remove test directory %q", testdir)
+	return MeTransfer{
+			testdir,
+			testdb,
+		}, func(tb testing.TB) {
+			err := os.RemoveAll(testdir)
+			if err != nil {
+				tb.Fatalf("could not remove test directory %q", testdir)
+			}
 		}
-	}
 }
 
 func assertEqual(t testing.TB, got, want string) {
